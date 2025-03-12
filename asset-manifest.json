@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/multiplication-app/static/css/main.e6c13ad2.css",
+    "main.js": "/multiplication-app/static/js/main.a0ca187f.js",
+    "static/js/453.b917e73e.chunk.js": "/multiplication-app/static/js/453.b917e73e.chunk.js",
+    "index.html": "/multiplication-app/index.html",
+    "main.e6c13ad2.css.map": "/multiplication-app/static/css/main.e6c13ad2.css.map",
+    "main.a0ca187f.js.map": "/multiplication-app/static/js/main.a0ca187f.js.map",
+    "453.b917e73e.chunk.js.map": "/multiplication-app/static/js/453.b917e73e.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.a0ca187f.js"
+  ]
+}
