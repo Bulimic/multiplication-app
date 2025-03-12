@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フラッシュカード＆4択式 掛け算暗記アプリ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      background-color: #f0f2f5;
+      color: #333;
+      padding: 20px;
+    }
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #4361ee;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .mode-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .mode-button {
+      padding: 8px 16px;
+      background-color: #e9ecef;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .mode-button.active {
+      background-color: #4361ee;
+      color: white;
+    }
+    .mode-button:hover {
+      opacity: 0.9;
+    }
+    .table-selector {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .table-selector h3 {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .table-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .table-button {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 50%;
+      background-color: #e9ecef;
+      cursor: pointer;
+    }
+    .table-button.active {
+      background-color: #4361ee;
+      color: white;
+    }
+    .content-area {
+      min-height: 300px;
+    }
+    .mastery-rate {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .math-card {
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .math-card.mastered {
+      border-color: #4caf50;
+    }
+    .color-blue {
+      background-color: #e3f2fd;
+    }
+    .color-green {
+      background-color: #e8f5e9;
+    }
+    .color-yellow {
+      background-color: #fff8e1;
+    }
+    .color-pink {
+      background-color: #fce4ec;
+    }
+    .quiz-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .streak-counter {
+      margin-bottom: 10px;
+      color: #666;
+      font-size: 14px;
+    }
+    .quiz-question {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+    .option-button {
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      background-color: white;
+      font-size: 20px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .option-button:hover {
+      background-color: #f5f5f5;
+    }
+    .option-button.selected {
+      border-color: #4361ee;
+      background-color: #e6f0ff;
+    }
+    .option-button.correct {
+      border-color: #4caf50;
+      background-color: #e8f5e9;
+    }
+    .option-button.incorrect {
+      border-color: #f44336;
+      background-color: #ffebee;
+    }
+    .result-message {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .result-message.correct {
+      color: #4caf50;
+    }
+    .result-message.incorrect {
+      color: #f44336;
+    }
+    .flashcard-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card-status {
+      margin-bottom: 10px;
+      color: #666;
+      font-size: 14px;
+    }
+    .flashcard {
+      width: 280px;
+      height: 200px;
+      perspective: 1000px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flashcard.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .flashcard-front {
+      background-color: white;
+      border: 2px solid #4361ee;
+    }
+    .flashcard-back {
+      background-color: #e3f2fd;
+      transform: rotateY(180deg);
+      border: 2px solid #4361ee;
+    }
+    .next-button {
+      padding: 8px 16px;
+      background-color: #4361ee;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .skip-button {
+      padding: 8px 16px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .memory-tip {
+      background-color: #fff8e1;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .memory-tip h3 {
+      margin-top: 0;
+      color: #ff9800;
+    }
+    @media (max-width: 600px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+      .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container" id="app">
+    <h1>フラッシュカード＆4択式 掛け算暗記アプリ</h1>
+    
+    <div class="mode-buttons" id="mode-buttons">
+      <button class="mode-button active" onclick="changeMode('learn')">学習モード</button>
+      <button class="mode-button" onclick="changeMode('quiz')">4択クイズ</button>
+      <button class="mode-button" onclick="changeMode('flashcard')">フラッシュカード</button>
+    </div>
+    
+    <div class="table-selector">
+      <h3 id="mode-label">学習する段を選択</h3>
+      <div class="table-buttons" id="table-buttons">
+        <button class="table-button" onclick="changeTable(0)">全</button>
+        <!-- 1-19の段のボタンはJavaScriptで生成 -->
+      </div>
+      <div class="mastery-rate" id="mastery-rate"></div>
+    </div>
+    
+    <div class="content-area" id="content-area">
+      <!-- ここに内容が動的に表示される -->
+    </div>
+  </div>
+
+  <script>
+    // アプリの状態
+    const state = {
+      mode: 'learn',
+      currentTable: 1,
+      masteredTables: {},
+      streak: 0,
+      quizQuestion: { num1: 1, num2: 1 },
+      quizOptions: [],
+      selectedAnswer: null,
+      quizResult: null,
+      flashcardQuestion: { num1: 1, num2: 1 },
+      showAnswer: false,
+      knownCards: [],
+      reviewCards: []
+    };
+
+    // 初期化
+    function init() {
+      // ローカルストレージからデータを読み込む
+      const savedMastered = localStorage.getItem('masteredTables');
+      if (savedMastered) {
+        state.masteredTables = JSON.parse(savedMastered);
+      }
+      
+      // 段ボタンを生成
+      const tableButtons = document.getElementById('table-buttons');
+      for (let i = 1; i <= 19; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'table-button';
+        btn.textContent = i;
+        btn.onclick = function() { changeTable(i); };
+        tableButtons.appendChild(btn);
+      }
+      
+      // 初期状態を設定
+      changeMode('learn');
+      changeTable(1);
+    }
+
+    // モード変更
+    function changeMode(newMode) {
+      state.mode = newMode;
+      
+      // ボタンの活性状態を更新
+      const buttons = document.getElementById('mode-buttons').children;
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+      
+      // 該当するボタンをアクティブに
+      for (let i = 0; i < buttons.length; i++) {
+        if (buttons[i].textContent.includes(getModeName(newMode))) {
+          buttons[i].classList.add('active');
+        }
+      }
+      
+      // モードラベルを更新
+      document.getElementById('mode-label').textContent = `${getModeName(newMode)}する段を選択`;
+      
+      // モードに応じた初期化
+      if (newMode === 'quiz') {
+        generateQuizQuestion();
+      } else if (newMode === 'flashcard') {
+        resetFlashcards();
+        generateFlashcardQuestion();
+      }
+      
+      // 内容を更新
+      updateContent();
+    }
+
+    // モード名から表示名を取得
+    function getModeName(mode) {
+      switch (mode) {
+        case 'learn': return '学習';
+        case 'quiz': return 'クイズ';
+        case 'flashcard': return 'フラッシュカード';
+        default: return mode;
+      }
+    }
+
+    // 段の変更
+    function changeTable(table) {
+      state.currentTable = table;
+      
+      // ボタンの活性状態を更新
+      const buttons = document.getElementById('table-buttons').children;
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+      
+      // 該当するボタンをアクティブに
+      for (let i = 0; i < buttons.length; i++) {
+        if ((table === 0 && buttons[i].textContent === '全') || 
+            parseInt(buttons[i].textContent) === table) {
+          buttons[i].classList.add('active');
+        }
+      }
+      
+      // マスター率を表示
+      if (table > 0) {
+        const rate = calculateMasteryRate(table);
+        document.getElementById('mastery-rate').textContent = `${table}の段 - マスター率: ${rate}%`;
+      } else {
+        document.getElementById('mastery-rate').textContent = '';
+      }
+      
+      // モードに応じた更新
+      if (state.mode === 'quiz') {
+        generateQuizQuestion(table);
+      } else if (state.mode === 'flashcard') {
+        resetFlashcards(table);
+        generateFlashcardQuestion();
+      }
+      
+      // 内容を更新
+      updateContent();
+    }
+
+    // 内容の更新
+    function updateContent() {
+      const contentArea = document.getElementById('content-area');
+      
+      if (state.mode === 'learn') {
+        contentArea.innerHTML = generateLearnContent();
+      } else if (state.mode === 'quiz') {
+        contentArea.innerHTML = generateQuizContent();
+      } else if (state.mode === 'flashcard') {
+        contentArea.innerHTML = generateFlashcardContent();
+      }
+    }
+
+    // 学習モードのコンテンツ生成
+    function generateLearnContent() {
+      let html = '';
+      const table = state.currentTable;
+      
+      if (table > 0) {
+        // 記憶のコツを表示
+        const tip = generateTip(table);
+        if (tip) {
+          html += `
+            <div class="memory-tip">
+              <h3>記憶のコツ:</h3>
+              <p>${tip}</p>
+            </div>
+          `;
+        }
+        
+        // 九九表を表示
+        html += '<div class="card-grid">';
+        for (let i = 1; i <= 19; i++) {
+          const answer = table * i;
+          const key = `${table}x${i}`;
+          const isMastered = state.masteredTables[key];
+          
+          html += `
+            <div class="math-card ${getColorClass(answer)} ${isMastered ? 'mastered' : ''}">
+              <div>${table} × ${i} = ${answer}</div>
+              ${isMastered ? '<div style="color: green">✓</div>' : ''}
+            </div>
+          `;
+        }
+        html += '</div>';
+      }
+      
+      return html;
+    }
+
+    // クイズモードのコンテンツ生成
+    function generateQuizContent() {
+      const { num1, num2 } = state.quizQuestion;
+      const correctAnswer = num1 * num2;
+      
+      let html = `
+        <div class="quiz-container">
+          <div class="streak-counter">連続正解: ${state.streak}問</div>
+          <div class="quiz-question">${num1} × ${num2} = ?</div>
+          <div class="options-grid">
+      `;
+      
+      // 選択肢
+      state.quizOptions.forEach(option => {
+        let className = 'option-button';
+        if (state.selectedAnswer === option) {
+          className += state.quizResult ? ' correct' : ' incorrect';
+        }
+        
+        html += `
+          <button class="${className}" onclick="checkQuizAnswer(${option})">
+            ${option}
+          </button>
+        `;
+      });
+      
+      html += '</div>';
+      
+      // 結果表示
+      if (state.quizResult !== null) {
+        html += `
+          <div class="result-message ${state.quizResult ? 'correct' : 'incorrect'}">
+            ${state.quizResult ? '正解！' : `不正解... 正解は ${correctAnswer} です`}
+          </div>
+        `;
+      }
+      
+      html += `
+        <button class="next-button" onclick="generateQuizQuestion()">次の問題</button>
+      </div>
+      `;
+      
+      return html;
+    }
+
+    // フラッシュカードモードのコンテンツ生成
+    function generateFlashcardContent() {
+      let html = `
+        <div class="flashcard-container">
+          <div class="card-status">
+            残り: ${state.reviewCards.length}問 / 習得済み: ${state.knownCards.length}問
+          </div>
+      `;
+      
+      if (state.flashcardQuestion) {
+        const { num1, num2 } = state.flashcardQuestion;
+        const answer = num1 * num2;
+        
+        html += `
+          <div class="flashcard ${state.showAnswer ? 'flipped' : ''}" onclick="toggleFlashcard()">
+            <div class="flashcard-inner">
+              <div class="flashcard-front">
+                <div>
+                  <div style="font-size: 28px; font-weight: bold;">${num1} × ${num2} = ?</div>
+                  <div style="margin-top: 20px; font-size: 12px; color: #666;">タップして答えを見る</div>
+                </div>
+              </div>
+              <div class="flashcard-back">
+                <div style="font-size: 42px; font-weight: bold;" class="${getColorClass(answer)}">
+                  ${answer}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        if (state.showAnswer) {
+          html += `
+            <div>
+              <button class="skip-button" onclick="handleFlashcardResponse(false)">もう一度</button>
+              <button class="next-button" onclick="handleFlashcardResponse(true)">覚えた</button>
+            </div>
+          `;
+        } else {
+          html += `
+            <button class="next-button" onclick="toggleFlashcard()">答えを見る</button>
+          `;
+        }
+      }
+      
+      if (state.reviewCards.length === 0) {
+        html += `
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="font-size: 20px; font-weight: bold; color: green;">全問完了！</p>
+            <button class="next-button" onclick="resetFlashcards()">最初からやり直す</button>
+          </div>
+        `;
+      }
+      
+      html += '</div>';
+      
+      return html;
+    }
+
+    // クイズ問題の生成
+    function generateQuizQuestion(table = state.currentTable) {
+      let num1, num2;
+      
+      if (table === 0) {
+        // ランダムな段
+        num1 = Math.floor(Math.random() * 19) + 1;
+        num2 = Math.floor(Math.random() * 19) + 1;
+      } else {
+        // 特定の段
+        num1 = table;
+        num2 = Math.floor(Math.random() * 19) + 1;
+      }
+      
+      const correctAnswer = num1 * num2;
+      
+      // 選択肢を生成
+      const options = [correctAnswer];
+      
+      // 間違った選択肢を追加
+      while (options.length < 4) {
+        let wrongAnswer;
+        const randomType = Math.floor(Math.random() * 4);
+        
+        if (randomType === 0) {
+          // 近い数の掛け算
+          const nearNum1 = Math.max(1, Math.min(19, num1 + (Math.random() < 0.5 ? 1 : -1)));
+          const nearNum2 = Math.max(1, Math.min(19, num2 + (Math.random() < 0.5 ? 1 : -1)));
+          wrongAnswer = nearNum1 * nearNum2;
+        } else if (randomType === 1) {
+          // ±10の範囲でランダム
+          wrongAnswer = correctAnswer + (Math.floor(Math.random() * 21) - 10);
+        } else if (randomType === 2) {
+          // 数字の入れ替え (例: 12と21)
+          const correctStr = correctAnswer.toString();
+          if (correctStr.length > 1) {
+            wrongAnswer = parseInt(correctStr.split('').reverse().join(''));
+          } else {
+            wrongAnswer = correctAnswer + 10;
+          }
+        } else {
+          // 完全ランダム
+          wrongAnswer = Math.floor(Math.random() * 361) + 1; // 19x19=361
+        }
+        
+        // 重複回避
+        if (!options.includes(wrongAnswer) && wrongAnswer !== correctAnswer && wrongAnswer > 0) {
+          options.push(wrongAnswer);
+        }
+      }
+      
+      // 選択肢をシャッフル
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      
+      state.quizQuestion = { num1, num2 };
+      state.quizOptions = options;
+      state.selectedAnswer = null;
+      state.quizResult = null;
+      
+      updateContent();
+    }
+
+    // クイズの回答チェック
+    function checkQuizAnswer(answer) {
+      if (state.selectedAnswer !== null) return;
+      
+      const correctAnswer = state.quizQuestion.num1 * state.quizQuestion.num2;
+      const isCorrect = answer === correctAnswer;
+      
+      state.selectedAnswer = answer;
+      state.quizResult = isCorrect;
+      
+      if (isCorrect) {
+        state.streak++;
+        
+        // マスター状態を更新
+        const key = `${state.quizQuestion.num1}x${state.quizQuestion.num2}`;
+        state.masteredTables[key] = true;
+        localStorage.setItem('masteredTables', JSON.stringify(state.masteredTables));
+        
+        // 少し待って次の問題
+        setTimeout(() => {
+          generateQuizQuestion();
+        }, 1000);
+      } else {
+        state.streak = 0;
+        
+        // 少し待って次の問題
+        setTimeout(() => {
+          generateQuizQuestion();
+        }, 1500);
+      }
+      
+      updateContent();
+    }
+
+    // フラッシュカードのリセット
+    function resetFlashcards(table = state.currentTable) {
+      const cards = [];
+      const tablesToUse = table === 0 ? Array.from({ length: 19 }, (_, i) => i + 1) : [table];
+      
+      tablesToUse.forEach(t => {
+        for (let i = 1; i <= 19; i++) {
+          cards.push({ num1: t, num2: i });
+        }
+      });
+      
+      // カードをシャッフル
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      
+      state.knownCards = [];
+      state.reviewCards = cards;
+      
+      generateFlashcardQuestion();
+    }
+
+    // フラッシュカード問題の生成
+    function generateFlashcardQuestion() {
+      if (state.reviewCards.length === 0) {
+        // 全問終了
+        updateContent();
+        return;
+      }
+      
+      // レビューカードから次の問題を取得
+      state.flashcardQuestion = state.reviewCards[0];
+      state.showAnswer = false;
+      
+      updateContent();
+    }
+
+    // フラッシュカードをめくる
+    function toggleFlashcard() {
+      state.showAnswer = !state.showAnswer;
+      updateContent();
+    }
+
+    // フラッシュカードの回答処理
+    function handleFlashcardResponse(known) {
+      const currentCard = { ...state.flashcardQuestion };
+      const remainingReviewCards = [...state.reviewCards.slice(1)];
+      
+      if (known) {
+        // 覚えた場合
+        state.knownCards.push(currentCard);
+        
+        // マスター状態を更新
+        const key = `${currentCard.num1}x${currentCard.num2}`;
+        state.masteredTables[key] = true;
+        localStorage.setItem('masteredTables', JSON.stringify(state.masteredTables));
+      } else {
+        // まだ覚えていない場合は後で再出題
+        const insertPosition = Math.min(remainingReviewCards.length, 5);
+        remainingReviewCards.splice(insertPosition, 0, currentCard);
+      }
+      
+      state.reviewCards = remainingReviewCards;
+      
+      // 次の問題へ
+      generateFlashcardQuestion();
+    }
+
+    // マスター率の計算
+    function calculateMasteryRate(table) {
+      let total = 0;
+      let mastered = 0;
+      
+      for (let i = 1; i <= 19; i++) {
+        const key = `${table}x${i}`;
+        if (state.masteredTables[key]) {
+          mastered++;
+        }
+        total++;
+      }
+      
+      return total > 0 ? Math.round((mastered / total) * 100) : 0;
+    }
+
+    // 答えの色クラスを取得
+    function getColorClass(answer) {
+      // 10の倍数は青
+      if (answer % 10 === 0) return 'color-blue';
+      // 5の倍数は緑
+      if (answer % 5 === 0) return 'color-green';
+      // 偶数は黄色
+      if (answer % 2 === 0) return 'color-yellow';
+      // 奇数はピンク
+      return 'color-pink';
+    }
+
+    // 掛け算のコツを生成
+    function generateTip(table) {
+      if (table === 9) {
+        return "9の段は十の位と一の位の数字を足すと9になります。例: 9×7=63→6+3=9";
+      } else if (table === 11) {
+        return "11の1桁の数との掛け算は、その数を2回繰り返すだけです。例: 11×3=33";
+      } else if (table % 5 === 0) {
+        return `${table}は5の倍数なので、結果はすべて0か5で終わります。`;
+      } else if (table > 10) {
+        const base10 = 10;
+        const remainder = table - base10;
+        return `${table}は${base10}+${remainder}なので、${base10}の段と${remainder}の段の和と考えられます。`;
+      }
+      return null;
+    }
+
+    // アプリ初期化
+    window.onload = init;
+  </script>
+</body>
+</html>
