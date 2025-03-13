@@ -1,7 +1,7 @@
 {
   "name": "multiplication-app",
   "version": "0.1.0",
-  "homepage": ".",
+  "homepage": "https://bulimic.github.io/multiplication-app",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
